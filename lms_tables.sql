@@ -100,3 +100,52 @@ CREATE TABLE afsm_participation_scoring (
   PRIMARY KEY (batch_id, score),
   FOREIGN KEY (batch_id) REFERENCES afsm_batches(id)
 );
+
+-- assignments table: defines an assignment per batch
+CREATE TABLE afsm_assignments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  batch_id INT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  instructions TEXT NOT NULL,
+  allow_upload_doc BOOLEAN NOT NULL DEFAULT TRUE,
+  allow_upload_pdf BOOLEAN NOT NULL DEFAULT TRUE,
+  allow_text_input BOOLEAN NOT NULL DEFAULT TRUE,
+  created_by INT NOT NULL,
+  created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_by INT NULL,
+  updated_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (batch_id) REFERENCES afsm_batches(id),
+  FOREIGN KEY (created_by) REFERENCES afsm_users(id),
+  FOREIGN KEY (updated_by) REFERENCES afsm_users(id)
+);
+
+-- submissions table: student submissions
+CREATE TABLE afsm_assignment_submissions (
+  assignment_id INT NOT NULL,
+  student_id INT NOT NULL,
+  doc_path VARCHAR(255) NULL,
+  pdf_path VARCHAR(255) NULL,
+  text_content TEXT NULL,
+  status ENUM('draft','submitted') NOT NULL DEFAULT 'draft',
+  submitted_date DATETIME NULL,
+  graded_by INT NULL,
+  grade_rubric JSON NULL,
+  grade_date DATETIME NULL,
+  PRIMARY KEY (assignment_id, student_id),
+  FOREIGN KEY (assignment_id) REFERENCES afsm_assignments(id),
+  FOREIGN KEY (student_id) REFERENCES afsm_users(id),
+  FOREIGN KEY (graded_by) REFERENCES afsm_users(id)
+);
+
+-- rubric master: admin-managed CRUD
+CREATE TABLE afsm_rubrics (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  criteria JSON NOT NULL,  -- e.g. [{"criterion":"Clarity","max_score":5},...]
+  created_by INT NOT NULL,
+  created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_by INT NULL,
+  updated_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (created_by) REFERENCES afsm_users(id),
+  FOREIGN KEY (updated_by) REFERENCES afsm_users(id)
+);

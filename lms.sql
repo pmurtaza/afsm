@@ -224,98 +224,34 @@ CREATE TABLE afsm_batch_students (
 );
 
 
-INSERT INTO afsm_batch_students (batch_id, student_id) VALUES
-  -- Batch A: Students 1–4
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch 1'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 1')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch 1'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 2')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch 1'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 3')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch 1'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 4')
-  ),
-  
-  -- Batch B: Students 5–8
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch B'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 5')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch B'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 6')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch B'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 7')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch B'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 8')
-  ),
-  
-  -- Batch C: Students 9–12
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch C'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 9')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch C'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 10')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch C'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 11')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch C'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 12')
-  ),
-  
-  -- Batch D: Students 13–16
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch D'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 13')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch D'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 14')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch D'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 15')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch D'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 16')
-  ),
-  
-  -- Batch E: Students 17–19
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch E'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 17')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch E'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 18')
-  ),
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch E'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 19')
-  ),
-  
-  -- Batch F: Student 20
-  (
-    (SELECT id FROM afsm_batches WHERE name = 'Batch F'),
-    (SELECT id FROM afsm_users   WHERE name = 'Student 20')
-  );
+-- Assuming student user_ids 1 through 20 correspond to Student 1–Student 20
+INSERT IGNORE INTO afsm_batch_students (batch_id, user_id, role) VALUES
+  -- Batch 1: Students 1–4
+  (1, 1, 'student'),
+  (1, 2, 'student'),
+  (1, 3, 'student'),
+  (1, 4, 'student'),
+  -- Batch 2: Students 5–8
+  (2, 5, 'student'),
+  (2, 6, 'student'),
+  (2, 7, 'student'),
+  (2, 8, 'student'),
+  -- Batch 3: Students 9–12
+  (3, 9, 'student'),
+  (3, 10, 'student'),
+  (3, 11, 'student'),
+  (3, 12, 'student'),
+  -- Batch 4: Students 13–16
+  (4, 13, 'student'),
+  (4, 14, 'student'),
+  (4, 15, 'student'),
+  (4, 16, 'student'),
+  -- Batch 5: Students 17–19
+  (5, 17, 'student'),
+  (5, 18, 'student'),
+  (5, 19, 'student'),
+  -- Batch 6: Student 20
+  (6, 20, 'student');
 
 
 ALTER TABLE afsm_users
@@ -361,3 +297,28 @@ INSERT INTO afsm_participation_scoring (batch_id, score) VALUES
   (4, 0),(4, 1),(4, 2),(4, 3),(4, 4),(4, 5),
   (5, 0),(5, 1),(5, 2),(5, 3),(5, 4),(5, 5),
   (6, 0),(6, 1),(6, 2),(6, 3),(6, 4),(6, 5);
+
+
+  INSERT INTO afsm_batch_students (batch_id, user_id, role) VALUES
+  (1, 4, 'teacher'),  -- Batch 1 assigned to Teacher with user_id=4
+  (2, 4, 'teacher'),  -- Batch 2 assigned to same teacher
+  (3, 5, 'teacher'),  -- Batch 3 assigned to Teacher user_id=5
+  (4, 5, 'teacher'),
+  (5, 4, 'teacher'),
+  (6, 5, 'teacher');
+
+-- Rename 'student_id' to 'user_id' to associate any user (student or teacher) with a batch
+CREATE TABLE afsm_batch_students (
+  batch_id INT NOT NULL,
+  user_id  INT NOT NULL,
+  role     ENUM('student','teacher') NOT NULL,
+  created_by   INT NULL,
+  created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_by   INT NULL,
+  updated_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (batch_id, user_id),
+  FOREIGN KEY (batch_id) REFERENCES afsm_batches(id),
+  FOREIGN KEY (user_id)    REFERENCES afsm_users(id),
+  FOREIGN KEY (created_by) REFERENCES afsm_users(id),
+  FOREIGN KEY (updated_by) REFERENCES afsm_users(id)
+);

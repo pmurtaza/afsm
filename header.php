@@ -30,6 +30,13 @@ if (session_status() === PHP_SESSION_NONE) {
           <?php elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'student'): ?>
             <li class="nav-item"><a class="nav-link" href="register.php">Register</a></li>
           <?php endif; ?>
+          <?php if (isset($_SESSION['role'])): ?>
+            <?php if (in_array($_SESSION['role'], ['teacher', 'admin'])): ?> <!-- Teachers/Admins can create and manage assignments -->
+              <li class="nav-item"><a class="nav-link" href="assignment.php">Manage Assignments</a></li>
+            <?php elseif ($_SESSION['role'] === 'student'): ?> <!-- Students can only submit assignments -->
+              <li class="nav-item"><a class="nav-link" href="assignment.php">My Assignment</a></li>
+            <?php endif; ?>
+          <?php endif; ?>
         </ul>
         <?php if (isset($_SESSION['username'])): ?>
           <span class="navbar-text text-white me-3">

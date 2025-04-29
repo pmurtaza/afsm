@@ -40,7 +40,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['participation'])) {
 }
 
 // Fetch batches
-$batches = $mysqli->query("SELECT id, name FROM afsm_batches ORDER BY name");
+// $batches = $mysqli->query("SELECT id, name FROM afsm_batches ORDER BY name");
+// Determine batch list based on user role
+if ($_SESSION['role'] === 'teacher') {
+  $stmt = $mysqli->prepare(
+      "SELECT b.id, b.name
+         FROM afsm_batches b
+         JOIN afsm_batch_students bs
+           ON b.id = bs.batch_id
+        WHERE bs.user_id = ?
+          AND bs.role = 'teacher'
+        ORDER BY b.name"
+  );
+  $stmt->bind_param('i', $_SESSION['user_id']);
+  $stmt->execute();
+  $batches = $stmt->get_result();
+  $stmt->close();
+} else {
+  // admin sees all batches
+  $batches = $mysqli->query("SELECT id, name FROM afsm_batches ORDER BY name");
+}
 $selectedBatch = $_GET['batch_id'] ?? null;
 
 // Fetch batch-specific scoring options
@@ -82,9 +101,9 @@ if ($selectedBatch) {
     $stmt = $mysqli->prepare(
         "SELECT u.id, u.name
          FROM afsm_users u
-         JOIN afsm_batch_students bs ON u.id = bs.student_id
+         JOIN afsm_batch_students bs ON u.id = bs.user_id 
          WHERE bs.batch_id = ?
-           AND u.role = 'student'
+           AND bs.role = 'student'
          ORDER BY u.name"
     );
     $stmt->bind_param('i', $selectedBatch);
