@@ -1,4 +1,5 @@
 <?php
+// https://chatgpt.com/c/6808c8e5-489c-8008-b9d5-880cf5edeef2
 // mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 require 'mysql_config.php';
 
