@@ -25,17 +25,14 @@ if (session_status() === PHP_SESSION_NONE) {
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item"><a class="nav-link" href="dashboard.php">Home</a></li>
           <?php if (isset($_SESSION['role']) && in_array($_SESSION['role'], ['teacher', 'admin'])): ?>
+            <li class="nav-item"><a class="nav-link" href="batch_overview.php">Batch Overview</a></li>
             <li class="nav-item"><a class="nav-link" href="attendance.php">Attendance</a></li>
             <li class="nav-item"><a class="nav-link" href="participation.php">Participation</a></li>
+            <li class="nav-item"><a class="nav-link" href="assignment.php">Manage Assignments</a></li>
+            <li class="nav-item"><a class="nav-link" href="grade_assignment.php">Grade Assignments</a></li>
           <?php elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'student'): ?>
+            <li class="nav-item"><a class="nav-link" href="assignment.php">My Assignment</a></li>
             <li class="nav-item"><a class="nav-link" href="register.php">Register</a></li>
-          <?php endif; ?>
-          <?php if (isset($_SESSION['role'])): ?>
-            <?php if (in_array($_SESSION['role'], ['teacher', 'admin'])): ?> <!-- Teachers/Admins can create and manage assignments -->
-              <li class="nav-item"><a class="nav-link" href="assignment.php">Manage Assignments</a></li>
-            <?php elseif ($_SESSION['role'] === 'student'): ?> <!-- Students can only submit assignments -->
-              <li class="nav-item"><a class="nav-link" href="assignment.php">My Assignment</a></li>
-            <?php endif; ?>
           <?php endif; ?>
         </ul>
         <?php if (isset($_SESSION['username'])): ?>

@@ -137,6 +137,34 @@ CREATE TABLE afsm_assignment_submissions (
   FOREIGN KEY (graded_by) REFERENCES afsm_users(id)
 );
 
+CREATE TABLE afsm_rubric_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  batch_id INT NOT NULL,
+  criterion_text TEXT NOT NULL,
+  level1 TEXT NOT NULL,
+  level2 TEXT NOT NULL,
+  level3 TEXT NOT NULL,
+  max_score INT NOT NULL DEFAULT 3,
+  created_by INT,
+  created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_by INT,
+  updated_date DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+DROP TABLE IF EXISTS afsm_submission_scores;
+CREATE TABLE afsm_submission_scores (
+  assignment_id    INT NOT NULL,
+  student_id       INT NOT NULL,
+  rubric_item_id   INT NOT NULL,
+  score            INT NOT NULL,
+  PRIMARY KEY (assignment_id, student_id, rubric_item_id),
+  FOREIGN KEY (assignment_id, student_id)
+    REFERENCES afsm_assignment_submissions(assignment_id, student_id),
+  FOREIGN KEY (rubric_item_id) REFERENCES afsm_rubric_items(id)
+);
+
+
 -- rubric master: admin-managed CRUD
 CREATE TABLE afsm_rubrics (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -149,3 +177,5 @@ CREATE TABLE afsm_rubrics (
   FOREIGN KEY (created_by) REFERENCES afsm_users(id),
   FOREIGN KEY (updated_by) REFERENCES afsm_users(id)
 );
+
+

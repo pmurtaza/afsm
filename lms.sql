@@ -322,3 +322,49 @@ CREATE TABLE afsm_batch_students (
   FOREIGN KEY (created_by) REFERENCES afsm_users(id),
   FOREIGN KEY (updated_by) REFERENCES afsm_users(id)
 );
+
+INSERT INTO afsm_rubric_items
+  (batch_id, criterion_text, level1, level2, level3, max_score)
+VALUES
+  -- 1.
+  (1,
+   'Explanation of the Deeni Perspective (a)',
+   'A brief explanation of the deeni perspective was not included',
+   'A brief explanation of the deeni perspective was included but missed important points and aspects',
+   'A brief explanation of the deeni perspective was clearly explained & included all the important points and aspects',
+   5),
+  -- 2.
+  (1,
+   'Comparison between the perspective before and after this module (a)',
+   'Was able to provide 0-1 point of comparison using 0-1 examples or evidence from real-life OR the points were not presented clearly using a proper paragraph or chart or a table',
+   'Was able to provide 2-3 point of comparison using 2-3 evidence from real life and each point was clearly explained using a proper paragraph or chart or a table',
+   'Was able to provide at least 4 point of comparison using at least 4 evidence from real life and each point was clearly explained using a proper paragraph or chart or a table',
+   5),
+  -- 3.
+  (1,
+   'Purpose of Tijaarat (b)',
+   'The explanation was not clear with 0-1 purpose',
+   'A clear explanation was given on 2-3 purposes',
+   'A clear explanation was given on at least 4 purposes',
+   5),
+  -- 4.
+  (1,
+   'Link between Tijaarat and Fiqh (b)',
+   'The interface/link between Tijaarat and fiqh did not clearly show the importance of fiqh over Tijaarat itself and/or supported with only 0-1 example',
+   'The interface/link between Tijaarat and fiqh clearly highlighted the importance of fiqh over Tijaarat itself and was supported with 2-3 examples',
+   'The interface/link between Tijaarat and Tijaarat clearly highlighted the importance of fiqh over Tijaarat itself and was supported with at least 4 examples',
+   5),
+  -- 5.
+  (1,
+   'Comprehensive list of skills (c)',
+   'The explanation lacked clarity and/or 1-2 skills were explained',
+   'The explanation was sometimes clear missing some important elements and/or 3-4 skills were explained',
+   'A comprehensive list of at least 6 skills required to be a successful Taajir who is Shariah Compliant is generated with a detailed and clear explanation of each skill',
+   5),
+  -- 6.
+  (1,
+   'Examples/Evidences given in support (c)',
+   '0-1 example/evidence was given and/or the examples were vague',
+   '3-4 examples/evidences were given',
+   'At least 6 examples/evidences were given',
+   5);
