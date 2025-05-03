@@ -189,7 +189,6 @@ include 'header.php';
                     value="<?= htmlspecialchars($existing[$item['id']] ?? '') ?>"
                     oninvalid="this.setCustomValidity('Please enter a score between 0 and <?= $item['max_score'] ?>')"
                     oninput="this.setCustomValidity('')">
-
                 </td>
               </tr>
             <?php endforeach; ?>
