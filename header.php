@@ -30,9 +30,11 @@ if (session_status() === PHP_SESSION_NONE) {
             <li class="nav-item"><a class="nav-link" href="participation.php">Participation</a></li>
             <li class="nav-item"><a class="nav-link" href="assignment.php">Manage Assignments</a></li>
             <li class="nav-item"><a class="nav-link" href="grade_assignment.php">Grade Assignments</a></li>
+            <li class="nav-item"><a class="nav-link" href="grade_assessment.php">Grade Assessment</a></li>
           <?php elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'student'): ?>
             <li class="nav-item"><a class="nav-link" href="assignment.php">My Assignment</a></li>
             <li class="nav-item"><a class="nav-link" href="register.php">Register</a></li>
+            <li class="nav-item"><a class="nav-link" href="student_assessments.php">Assessments</a></li>
           <?php endif; ?>
           <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
         <li class="nav-item dropdown">
@@ -41,11 +43,12 @@ if (session_status() === PHP_SESSION_NONE) {
           </a>
           <ul class="dropdown-menu" aria-labelledby="adminDropdown">
             <li><a class="dropdown-item" href="manage_assessments.php">Manage Assessments</a></li>
-            <li><a class="dropdown-item" href="questions_crud.php">Manage Questions</a></li>
-            <li><a class="dropdown-item" href="options_crud.php">Manage MCQ Options</a></li>
-            <li><a class="dropdown-item" href="pairs_crud.php">Manage Match Pairs</a></li>
-            <li><a class="dropdown-item" href="submissions_crud.php">View Submissions</a></li>
-          </ul>
+            <li><a class="dropdown-item" href="manage_questions.php">Manage Questions</a></li>
+            <li><a class="dropdown-item" href="manage_options.php">Manage MCQ Options</a></li>
+            <li><a class="dropdown-item" href="manage_match_pairs.php">Manage Match Pairs</a></li>
+            <li><a class="dropdown-item" href="view_submissions.php">View Submissions</a></li>
+            <li><a class="dropdown-item"href="student_assessments.php">Assessments</a></li>
+            </ul>
         </li>
         <?php endif; ?>
         </ul>
