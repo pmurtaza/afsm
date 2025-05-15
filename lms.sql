@@ -307,21 +307,6 @@ INSERT INTO afsm_participation_scoring (batch_id, score) VALUES
   (5, 4, 'teacher'),
   (6, 5, 'teacher');
 
--- Rename 'student_id' to 'user_id' to associate any user (student or teacher) with a batch
-CREATE TABLE afsm_batch_students (
-  batch_id INT NOT NULL,
-  user_id  INT NOT NULL,
-  role     ENUM('student','teacher') NOT NULL,
-  created_by   INT NULL,
-  created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_by   INT NULL,
-  updated_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (batch_id, user_id),
-  FOREIGN KEY (batch_id) REFERENCES afsm_batches(id),
-  FOREIGN KEY (user_id)    REFERENCES afsm_users(id),
-  FOREIGN KEY (created_by) REFERENCES afsm_users(id),
-  FOREIGN KEY (updated_by) REFERENCES afsm_users(id)
-);
 
 INSERT INTO afsm_rubric_items
   (batch_id, criterion_text, level1, level2, level3, max_score)

@@ -165,17 +165,158 @@ CREATE TABLE afsm_submission_scores (
 );
 
 
--- rubric master: admin-managed CRUD
-CREATE TABLE afsm_rubrics (
+-- 1) Define assessment/test instances per batch
+CREATE TABLE afsm_assessments (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  criteria JSON NOT NULL,  -- e.g. [{"criterion":"Clarity","max_score":5},...]
-  created_by INT NOT NULL,
-  created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_by INT NULL,
-  updated_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (created_by) REFERENCES afsm_users(id),
-  FOREIGN KEY (updated_by) REFERENCES afsm_users(id)
+  batch_id INT NOT NULL,
+  type ENUM('pre','post','final') NOT NULL,
+  title VARCHAR(255),
+  instructions TEXT,
+  created_by INT,
+  created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_by INT,
+  updated_date DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (batch_id) REFERENCES afsm_batches(id)
 );
 
+-- 2) Questions in each assessment
+CREATE TABLE afsm_questions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  assessment_id INT NOT NULL,
+  type ENUM('mcq','fill_blank','match','short','long') NOT NULL,
+  question_text TEXT NOT NULL,
+  weight INT NOT NULL DEFAULT 1,
+  created_by INT,
+  created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (assessment_id) REFERENCES afsm_assessments(id)
+);
 
+-- 3) MCQ options
+CREATE TABLE afsm_question_options (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  question_id INT NOT NULL,
+  option_text VARCHAR(255) NOT NULL,
+  is_correct BOOLEAN NOT NULL DEFAULT FALSE,
+  FOREIGN KEY (question_id) REFERENCES afsm_questions(id)
+);
+
+-- 4) Match-the-columns pairs
+CREATE TABLE afsm_match_pairs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  question_id INT NOT NULL,
+  left_text VARCHAR(255) NOT NULL,
+  right_text VARCHAR(255) NOT NULL,
+  FOREIGN KEY (question_id) REFERENCES afsm_questions(id)
+);
+
+-- 5) Student responses
+CREATE TABLE afsm_assessment_submissions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  assessment_id INT NOT NULL,
+  student_id INT NOT NULL,
+  submitted_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  status ENUM('in_progress','submitted') NOT NULL DEFAULT 'in_progress',
+  FOREIGN KEY (assessment_id) REFERENCES afsm_assessments(id),
+  FOREIGN KEY (student_id) REFERENCES afsm_users(id)
+);
+
+-- 6) Individual answers
+CREATE TABLE afsm_responses (
+  submission_id INT NOT NULL,
+  question_id INT NOT NULL,
+  selected_option_id INT NULL,
+  text_response TEXT NULL,
+  obtained_marks INT NULL,
+  PRIMARY KEY (submission_id, question_id),
+  FOREIGN KEY (submission_id) REFERENCES afsm_assessment_submissions(id),
+  FOREIGN KEY (question_id) REFERENCES afsm_questions(id),
+  FOREIGN KEY (selected_option_id) REFERENCES afsm_question_options(id)
+);
+---
+-- 1) Define assessment/test instances per batch
+CREATE TABLE afsm_assessments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  batch_id INT NOT NULL,
+  type ENUM('pre','post','final') NOT NULL,
+  title VARCHAR(255),
+  instructions TEXT,
+  created_by INT,
+  created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_by INT,
+  updated_date DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (batch_id) REFERENCES afsm_batches(id)
+);
+
+-- 2) Questions in each assessment
+CREATE TABLE afsm_questions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  assessment_id INT NOT NULL,
+  type ENUM('mcq','fill_blank','match','short','long') NOT NULL,
+  question_text TEXT NOT NULL,
+  weight INT NOT NULL DEFAULT 1,
+  allow_multiple BOOLEAN NOT NULL DEFAULT FALSE,
+  created_by INT,
+  created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (assessment_id) REFERENCES afsm_assessments(id)
+);
+
+-- 3) MCQ options
+CREATE TABLE afsm_question_options (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  question_id INT NOT NULL,
+  option_text VARCHAR(255) NOT NULL,
+  is_correct BOOLEAN NOT NULL DEFAULT FALSE,
+  FOREIGN KEY (question_id) REFERENCES afsm_questions(id)
+);
+
+-- 4) Match-the-columns pairs
+CREATE TABLE afsm_match_pairs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  question_id INT NOT NULL,
+  left_text VARCHAR(255) NOT NULL,
+  right_text VARCHAR(255) NOT NULL,
+  FOREIGN KEY (question_id) REFERENCES afsm_questions(id)
+);
+
+-- 5) Student submissions
+CREATE TABLE afsm_assessment_submissions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  assessment_id INT NOT NULL,
+  student_id INT NOT NULL,
+  submitted_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  status ENUM('in_progress','submitted') NOT NULL DEFAULT 'in_progress',
+  FOREIGN KEY (assessment_id) REFERENCES afsm_assessments(id),
+  FOREIGN KEY (student_id) REFERENCES afsm_users(id)
+);
+
+-- 6) Individual responses (text-based & marks)
+CREATE TABLE afsm_responses (
+  submission_id INT NOT NULL,
+  question_id INT NOT NULL,
+  text_response TEXT NULL,
+  obtained_marks INT NULL,
+  PRIMARY KEY (submission_id, question_id),
+  FOREIGN KEY (submission_id) REFERENCES afsm_assessment_submissions(id),
+  FOREIGN KEY (question_id) REFERENCES afsm_questions(id)
+);
+
+-- 7) MCQ selected options (to handle single or multiple answers)
+CREATE TABLE afsm_response_options (
+  submission_id INT NOT NULL,
+  question_id INT NOT NULL,
+  option_id INT NOT NULL,
+  PRIMARY KEY (submission_id, question_id, option_id),
+  FOREIGN KEY (submission_id, question_id) REFERENCES afsm_responses(submission_id, question_id),
+  FOREIGN KEY (option_id) REFERENCES afsm_question_options(id)
+);
+
+erDiagram
+  afsm_batches ||--o{ afsm_assessments : contains
+  afsm_assessments ||--o{ afsm_questions : has
+  afsm_questions ||--o{ afsm_question_options : offers
+  afsm_questions ||--o{ afsm_match_pairs : pairs
+  afsm_assessments ||--o{ afsm_assessment_submissions : "student attempts"
+  afsm_responses ||--o{ afsm_response_options : "selected options"
+  afsm_assessment_submissions ||--o{ afsm_responses : records
+  afsm_users ||--o{ afsm_assessment_submissions : "takes"
+  afsm_users ||--o{ afsm_assessments : creates

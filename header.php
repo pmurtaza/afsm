@@ -34,13 +34,29 @@ if (session_status() === PHP_SESSION_NONE) {
             <li class="nav-item"><a class="nav-link" href="assignment.php">My Assignment</a></li>
             <li class="nav-item"><a class="nav-link" href="register.php">Register</a></li>
           <?php endif; ?>
+          <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+            Assessments
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+            <li><a class="dropdown-item" href="manage_assessments.php">Manage Assessments</a></li>
+            <li><a class="dropdown-item" href="questions_crud.php">Manage Questions</a></li>
+            <li><a class="dropdown-item" href="options_crud.php">Manage MCQ Options</a></li>
+            <li><a class="dropdown-item" href="pairs_crud.php">Manage Match Pairs</a></li>
+            <li><a class="dropdown-item" href="submissions_crud.php">View Submissions</a></li>
+          </ul>
+        </li>
+        <?php endif; ?>
         </ul>
+        <ul class="navbar-nav">
         <?php if (isset($_SESSION['username'])): ?>
           <span class="navbar-text text-white me-3">
             Salaam, <?= htmlspecialchars($_SESSION['username']) ?>
           </span>
           <a href="logout.php" class="btn btn-outline-light">Logout</a>
         <?php endif; ?>
+        </ul>
       </div>
     </div>
   </nav>

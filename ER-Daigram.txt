@@ -1,0 +1,132 @@
+Below is an Entity–Relationship diagram in Mermaid syntax showing all your `afsm_*` tables and how they relate. You can copy this into any Markdown file that supports Mermaid to render the diagram.
+
+```mermaid
+erDiagram
+    afsm_users {
+        int id PK
+        varchar name
+        varchar email
+        varchar password
+        enum role
+        int created_by
+        datetime created_date
+        int updated_by
+        datetime updated_date
+    }
+    afsm_batches {
+        int id PK
+        varchar name
+        int created_by
+        datetime created_date
+        int updated_by
+        datetime updated_date
+    }
+    afsm_batch_students {
+        int batch_id PK,FK
+        int user_id  PK,FK
+        enum role
+    }
+    afsm_sessions {
+        int id PK
+        int batch_id FK
+        varchar name
+        date session_date
+    }
+    afsm_attendance {
+        int session_id PK,FK
+        int user_id    PK,FK
+        enum status
+        int teacher_id FK
+        int created_by
+        datetime created_date
+        int updated_by
+        datetime updated_date
+    }
+    afsm_participation_scoring {
+        int id PK
+        int batch_id FK
+        int score_value
+        int created_by
+        datetime created_date
+        int updated_by
+        datetime updated_date
+    }
+    afsm_participation {
+        int session_id PK,FK
+        int user_id    PK,FK
+        int score FK
+        int created_by
+        datetime created_date
+        int updated_by
+        datetime updated_date
+    }
+    afsm_assignments {
+        int id PK
+        int batch_id FK
+        varchar title
+        text instructions
+        bool allow_upload_doc
+        bool allow_upload_pdf
+        bool allow_text_input
+        int created_by
+        datetime created_date
+        int updated_by
+        datetime updated_date
+    }
+    afsm_assignment_submissions {
+        int assignment_id  PK,FK
+        int student_id     PK,FK
+        varchar doc_path
+        varchar pdf_path
+        text text_content
+        enum status
+        datetime submitted_date
+        int graded_by
+        json grade_rubric
+        datetime grade_date
+    }
+    afsm_rubric_items {
+        int id PK
+        int batch_id FK
+        text criterion_text
+        text level1
+        text level2
+        text level3
+        int max_score
+        int created_by
+        datetime created_date
+        int updated_by
+        datetime updated_date
+    }
+    afsm_submission_scores {
+        int assignment_id   PK,FK
+        int student_id      PK,FK
+        int rubric_item_id  PK,FK
+        int score
+    }
+
+    afsm_users ||--o{ afsm_batch_students : enrolls
+    afsm_batches ||--o{ afsm_batch_students : has
+    afsm_batches ||--o{ afsm_sessions       : schedules
+    afsm_users ||--o{ afsm_attendance      : attends
+    afsm_sessions ||--o{ afsm_attendance     : records
+    afsm_users ||--o{ afsm_participation   : participates
+    afsm_sessions ||--o{ afsm_participation  : records
+    afsm_batches ||--o{ afsm_participation_scoring : defines
+    afsm_participation_scoring ||--o{ afsm_participation : scores
+    afsm_batches ||--o{ afsm_assignments    : assigns
+    afsm_assignments ||--o{ afsm_assignment_submissions : receives
+    afsm_users ||--o{ afsm_assignment_submissions    : submits
+    afsm_batches ||--o{ afsm_rubric_items   : defines
+    afsm_rubric_items ||--o{ afsm_submission_scores : scores
+    afsm_assignment_submissions ||--o{ afsm_submission_scores : scored_by
+```
+erDiagram
+  afsm_batches ||--o{ afsm_assessments : contains
+  afsm_assessments ||--o{ afsm_questions : has
+  afsm_questions ||--o{ afsm_question_options : offers
+  afsm_questions ||--o{ afsm_match_pairs : pairs
+  afsm_assessments ||--o{ afsm_assessment_submissions : "student attempts"
+  afsm_assessment_submissions ||--o{ afsm_responses : records
+  afsm_users ||--o{ afsm_assessment_submissions : "takes"
+  afsm_users ||--o{ afsm_assessments : creates
