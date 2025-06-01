@@ -99,7 +99,53 @@ foreach ($questions as $q) {
 }
 
 $page_title = 'Submission Detail';
+
+// Fetch assessment & batch for breadcrumb
+// assessment and batch
+$stmt = $mysqli->prepare(
+  "SELECT a.type, a.title, b.name AS batch_name, b.id AS batch_id
+     FROM afsm_assessments a
+     JOIN afsm_batches b ON a.batch_id = b.id
+    WHERE a.id = ?"
+);
+$stmt->bind_param('i', $data['assessment_id']);
+$stmt->execute();
+$info = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+// student name already loaded earlier into $data['student_name']
+
 include 'header.php';
+// Breadcrumb
+?>
+<div class="container mt-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="batch_overview.php?batch_id=<?= htmlspecialchars($info['batch_id']) ?>">Batch: <?= htmlspecialchars($info['batch_name']) ?></a></li>
+      <li class="breadcrumb-item active" aria-current="page"><?= ucfirst(htmlspecialchars($info['type'])) ?> Assessment: <?= htmlspecialchars($info['title']) ?></li>
+    </ol>
+  </nav>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h4>Student: <?= htmlspecialchars($info['student_name']) ?></h4>
+      <p class="text-muted">
+        Assessment Type: <?= ucfirst(htmlspecialchars($info['type'])) ?> •
+        Status: <?= ucfirst(htmlspecialchars($status)) ?> •
+        <?php if ($status === 'submitted'): ?>
+          Submitted on: <?= (new DateTime(htmlspecialchars($submissionDate)))->format('M d, Y h:i A') ?>
+        <?php endif; ?>
+      </p>
+    </div>
+  </div>
+
+  <?php if ($_SERVER['REQUEST_METHOD'] === 'POST'): ?>
+    <div class="alert alert-success">Grades have been saved successfully!</div>
+  <?php endif; ?>
+
+  <h5>Assessment Questions & Responses</h5>
+</div>
+<?php
 ?>
 <h1>Submission Details</h1>
 <p><strong>Student:</strong> <?= htmlspecialchars($data['student_name']) ?></p>

@@ -268,6 +268,10 @@ CREATE TABLE afsm_question_options (
   is_correct BOOLEAN NOT NULL DEFAULT FALSE,
   FOREIGN KEY (question_id) REFERENCES afsm_questions(id)
 );
+ALTER TABLE afsm_questions
+  ADD COLUMN allowed_file_types VARCHAR(255) DEFAULT NULL,  -- comma separated, eg: "pdf,doc,docx"
+  ADD COLUMN max_file_size_mb INT DEFAULT NULL,             -- max size per file in MB
+  ADD COLUMN max_file_count INT DEFAULT NULL;               -- max number of files allowed
 
 -- 4) Match-the-columns pairs
 CREATE TABLE afsm_match_pairs (
@@ -277,6 +281,15 @@ CREATE TABLE afsm_match_pairs (
   right_text VARCHAR(255) NOT NULL,
   FOREIGN KEY (question_id) REFERENCES afsm_questions(id)
 );
+
+CREATE TABLE afsm_file_uploads (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  response_id INT NOT NULL,
+  file_path VARCHAR(255) NOT NULL,
+  uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (response_id) REFERENCES afsm_responses(id) ON DELETE CASCADE
+);
+
 
 -- 5) Student submissions
 CREATE TABLE afsm_assessment_submissions (
