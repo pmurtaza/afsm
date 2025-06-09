@@ -12,20 +12,56 @@ $userId = $_SESSION['user_id'];
 // Handle create/update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $action = $_POST['action'];
+  $assessment_id       = $_POST['assessment_id'];
+  $type                = $_POST['type'];
+  $question_text       = $_POST['question_text'];
+  $weight              = $_POST['weight'];
+  $allow_multiple      = $_POST['allow_multiple'];
+  $allowed_file_types  = $_POST['allowed_file_types'] ?? null;
+  $max_file_size_mb    = $_POST['max_file_size_mb'] ?? null;
+  $max_file_count      = $_POST['max_file_count'] ?? null;
   if ($action === 'create') {
-    $sql = "INSERT INTO afsm_questions (assessment_id, type, question_text, weight, allow_multiple, created_by) VALUES (?,?,?,?,?,?)";
+    $sql = "INSERT INTO afsm_questions 
+              (assessment_id, type, question_text, weight, allow_multiple, created_by, allowed_file_types, max_file_size_mb, max_file_count)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $mysqli->prepare($sql);
     if (!$stmt) {
       die('Prepare failed (create): ' . $mysqli->error);
     }
-    $stmt->bind_param('issiii', $_POST['assessment_id'], $_POST['type'], $_POST['question_text'], $_POST['weight'], $_POST['allow_multiple'], $userId);
+    $stmt->bind_param(
+      'issiiiisi',
+      $assessment_id,
+      $type,
+      $question_text,
+      $weight,
+      $allow_multiple,
+      $userId,
+      $allowed_file_types,
+      $max_file_size_mb,
+      $max_file_count
+    );
   } else {
-    $sql = "UPDATE afsm_questions SET assessment_id=?, type=?, question_text=?, weight=?, allow_multiple=? WHERE id=?";
+    $sql = "UPDATE afsm_questions SET 
+              assessment_id=?, type=?, question_text=?, weight=?, allow_multiple=?, 
+              allowed_file_types=?, max_file_size_mb=?, max_file_count=?
+            WHERE id=?";
     $stmt = $mysqli->prepare($sql);
     if (!$stmt) {
       die('Prepare failed (update): ' . $mysqli->error);
     }
-    $stmt->bind_param('issiii', $_POST['assessment_id'], $_POST['type'], $_POST['question_text'], $_POST['weight'], $_POST['allow_multiple'], $_POST['id']);
+    $id = $_POST['id'];
+    $stmt->bind_param(
+      'issiiiisii',
+      $assessment_id,
+      $type,
+      $question_text,
+      $weight,
+      $allow_multiple,
+      $allowed_file_types,
+      $max_file_size_mb,
+      $max_file_count,
+      $id
+    );
   }
   $stmt->execute();
   $stmt->close();
@@ -54,12 +90,12 @@ if ($res = $mysqli->query("SELECT id, title FROM afsm_assessments ORDER BY creat
 
 // Fetch all questions
 $questions = [];
-if ($res = $mysqli->query(
-  "SELECT q.id, q.assessment_id, a.title AS assessment_title, q.type, q.question_text, q.weight, q.allow_multiple
-     FROM afsm_questions q
-     JOIN afsm_assessments a ON q.assessment_id = a.id
-     ORDER BY q.created_date DESC"
-)) {
+$sql = "SELECT q.id, q.assessment_id, a.title AS assessment_title, q.type, q.question_text, q.weight, q.allow_multiple, 
+               q.allowed_file_types, q.max_file_size_mb, q.max_file_count
+          FROM afsm_questions q
+          JOIN afsm_assessments a ON q.assessment_id = a.id
+         ORDER BY q.created_date DESC";
+if ($res = $mysqli->query($sql)) {
   while ($row = $res->fetch_assoc()) {
     $questions[] = $row;
   }
@@ -82,22 +118,28 @@ include 'header.php';
       <th>Question</th>
       <th>Weight</th>
       <th>Multiple?</th>
+      <th>Allowed File Types</th>
+      <th>Max File Size (MB)</th>
+      <th>Max File Count</th>
       <th>Actions</th>
     </tr>
   </thead>
   <tbody>
     <?php if (empty($questions)): ?>
       <tr>
-        <td colspan="7" class="text-center">No questions found.</td>
+        <td colspan="10" class="text-center">No questions found.</td>
       </tr>
       <?php else: foreach ($questions as $q): ?>
         <tr>
           <td><?= $q['id'] ?></td>
           <td><?= htmlspecialchars($q['assessment_title']) ?></td>
-          <td><?= $q['type'] ?></td>
+          <td><?= htmlspecialchars($q['type']) ?></td>
           <td><?= htmlspecialchars($q['question_text']) ?></td>
           <td><?= $q['weight'] ?></td>
           <td><?= $q['allow_multiple'] ? 'Yes' : 'No' ?></td>
+          <td><?= htmlspecialchars($q['allowed_file_types'] ?? '') ?></td>
+          <td><?= htmlspecialchars($q['max_file_size_mb'] ?? '') ?></td>
+          <td><?= htmlspecialchars($q['max_file_count'] ?? '') ?></td>
           <td>
             <button class="btn btn-sm btn-primary" onclick='openForm(<?= json_encode($q) ?>)'>Edit</button>
             <a href="?delete=<?= $q['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete question?')">Delete</a>
@@ -134,11 +176,10 @@ include 'header.php';
             <label class="form-label">Type</label>
             <select name="type" id="question-type" class="form-select" required>
               <option value="mcq">Multiple Choice / Fill in the Blanks</option>
-              <!-- <option value="fill_blank">Fill in the Blank</option> -->
               <option value="match">Match Columns</option>
               <option value="short">Short Answer</option>
               <option value="long">Long Answer</option>
-              <option value="file_upload">File Upload</option> <!-- New option -->
+              <option value="file_upload">File Upload</option>
             </select>
           </div>
           <div class="mb-3">
@@ -158,29 +199,22 @@ include 'header.php';
               </select>
             </div>
           </div>
+
+          <div id="fileSettings" style="display:none;">
+            <div class="mb-3">
+              <label>Allowed File Types (comma separated, e.g. pdf,doc,docx)</label>
+              <input type="text" name="allowed_file_types" id="allowed_file_types" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label>Max File Size (MB)</label>
+              <input type="number" name="max_file_size_mb" id="max_file_size_mb" class="form-control" min="1" value="5">
+            </div>
+            <div class="mb-3">
+              <label>Max Number of Files</label>
+              <input type="number" name="max_file_count" id="max_file_count" class="form-control" min="1" value="1">
+            </div>
+          </div>
         </div>
-        <div id="fileSettings" style="display:none;">
-          <div class="mb-3">
-            <label>Allowed File Types (comma separated, e.g. pdf,doc,docx)</label>
-            <input type="text" name="allowed_file_types" class="form-control" value="<?= htmlspecialchars($allowed_file_types ?? '') ?>">
-          </div>
-          <div class="mb-3">
-            <label>Max File Size (MB)</label>
-            <input type="number" name="max_file_size_mb" class="form-control" min="1" value="<?= htmlspecialchars($max_file_size_mb ?? 5) ?>">
-          </div>
-          <div class="mb-3">
-            <label>Max Number of Files</label>
-            <input type="number" name="max_file_count" class="form-control" min="1" value="<?= htmlspecialchars($max_file_count ?? 1) ?>">
-          </div>
-        </div>
-        <script>
-          function toggleFileSettings() {
-            const type = document.getElementById('type').value;
-            document.getElementById('fileSettings').style.display = (type === 'file_upload') ? 'block' : 'none';
-          }
-          // call once on load to set correct visibility
-          toggleFileSettings();
-        </script>
 
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -193,6 +227,17 @@ include 'header.php';
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.4.1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+  function toggleFileSettings() {
+    const type = document.getElementById('question-type').value;
+    document.getElementById('fileSettings').style.display = (type === 'file_upload') ? 'block' : 'none';
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('question-type');
+    select.addEventListener('change', toggleFileSettings);
+    toggleFileSettings();
+  });
+
   function openForm(data = null) {
     const modal = new bootstrap.Modal(document.getElementById('questionModal'));
     document.getElementById('question-action').value = data ? 'update' : 'create';
@@ -203,6 +248,9 @@ include 'header.php';
       document.getElementById('question-text').value = data.question_text;
       document.getElementById('question-weight').value = data.weight;
       document.getElementById('question-multiple').value = data.allow_multiple;
+      document.getElementById('allowed_file_types').value = data.allowed_file_types ?? '';
+      document.getElementById('max_file_size_mb').value = data.max_file_size_mb ?? 5;
+      document.getElementById('max_file_count').value = data.max_file_count ?? 1;
     } else {
       document.getElementById('question-id').value = '';
       document.getElementById('question-assessment').value = '';
@@ -210,7 +258,11 @@ include 'header.php';
       document.getElementById('question-text').value = '';
       document.getElementById('question-weight').value = '1';
       document.getElementById('question-multiple').value = '0';
+      document.getElementById('allowed_file_types').value = '';
+      document.getElementById('max_file_size_mb').value = 5;
+      document.getElementById('max_file_count').value = 1;
     }
+    toggleFileSettings();
     modal.show();
   }
 </script>
