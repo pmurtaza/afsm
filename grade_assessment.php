@@ -37,6 +37,21 @@ if (!$stmt->fetch()) {
 }
 $stmt->close();
 
+// Fetch the uploaded file for the given question
+// $stmt = $mysqli->prepare("
+//     SELECT file_path
+//     FROM afsm_responses
+//     WHERE submission_id = ? AND question_id = ? AND file_path IS NOT NULL
+// ");
+// $stmt->bind_param('ii', $submissionId, $q['id']);
+// $stmt->execute();
+// $fileResult = $stmt->get_result();
+// $file = $fileResult->fetch_assoc();
+// $stmt->close();
+// if ($file) {
+//     // Display the uploaded file
+//     echo "<p>Uploaded File: <a href='" . htmlspecialchars($file['file_path']) . "' target='_blank'>View File</a></p>";
+// }
 // Fetch batch, assessment and student info
 $stmt = $mysqli->prepare("
   SELECT a.type, a.title, b.name as batch_name, b.id as batch_id,

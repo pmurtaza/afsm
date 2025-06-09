@@ -104,6 +104,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
       $stmt->close();
     }
+    if ($q['type'] === 'file_upload' && isset($_FILES['file_upload_' . $q['id']])) {
+            $file = $_FILES['file_upload_' . $q['id']];
+            
+            // Validate file type and size
+            if ($file['error'] === UPLOAD_ERR_OK) {
+                // You can add file type/size validations here
+                $filePath = $uploadDir . basename($file['name']);
+                move_uploaded_file($file['tmp_name'], $filePath);
+
+                // Store the file path in the database
+                $stmt = $mysqli->prepare("INSERT INTO afsm_responses (submission_id, question_id, file_path) VALUES (?, ?, ?)");
+                $stmt->bind_param('iis', $submissionId, $q['id'], $filePath);
+                $stmt->execute();
+                $stmt->close();
+            }
+        }
   }
   header('Location: student_assessments.php?submitted=1');
   exit;
@@ -119,6 +135,13 @@ include 'header.php';
     <?php foreach ($questions as $i => $q): ?>
       <div class="mb-4">
         <p><strong><?= $i + 1 ?>. <?= htmlspecialchars($q['question_text']) ?> (<?= $q['weight'] ?> pts)</strong></p>
+        <?php if ($q['type'] === 'file_upload'): ?>
+          <label>Upload Files (max <?= $q['max_file_count'] ?? 1 ?> files)</label>
+          <input required type="file" name="file_upload_<?= $q['id'] ?>[]" multiple
+            accept="<?= implode(',', array_map(fn($ext) => '.' . trim($ext), explode(',', $q['allowed_file_types'] ?? ''))) ?>"
+            <?= ($q['max_file_count'] ?? 1) > 1 ? '' : 'multiple' ?>>
+          <small>Max size per file: <?= $q['max_file_size_mb'] ?? 5 ?> MB</small>
+        <?php endif; ?>
         <?php if ($q['type'] === 'mcq'): ?>
           <?php foreach ($options[$q['id']] as $opt): ?>
             <div class="form-check">
@@ -148,13 +171,6 @@ include 'header.php';
               <?php endforeach; ?>
             </div>
           </div>
-        <?php endif; ?>
-        <?php if ($q['type'] === 'file_upload'): ?>
-          <label>Upload Files (max <?= $q['max_file_count'] ?? 1 ?> files)</label>
-          <input type="file" name="file_upload_<?= $q['id'] ?>[]" multiple
-            accept="<?= implode(',', array_map(fn($ext) => '.' . trim($ext), explode(',', $q['allowed_file_types'] ?? ''))) ?>"
-            <?= ($q['max_file_count'] ?? 1) > 1 ? '' : 'multiple' ?>>
-          <small>Max size per file: <?= $q['max_file_size_mb'] ?? 5 ?> MB</small>
         <?php endif; ?>
       </div>
     <?php endforeach; ?>
